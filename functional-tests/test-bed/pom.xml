@@ -71,7 +71,8 @@
           <threadCount>${surefire.thread.count}</threadCount>
           <reuseForks>true</reuseForks>
           <argLine>-Xmx1024m</argLine>
-          <parallel>classesAndMethods</parallel>
+	  <parallel>classesAndMethods</parallel>
+	  <forkedProcessTimeoutInSeconds>180</forkedProcessTimeoutInSeconds>
         </configuration>
 
       </plugin>
