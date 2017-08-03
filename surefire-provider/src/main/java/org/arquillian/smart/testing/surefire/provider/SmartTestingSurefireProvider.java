@@ -36,22 +36,8 @@ public class SmartTestingSurefireProvider implements SurefireProvider {
         this.surefireProvider = surefireProviderFactory.createInstance();
     }
 
-    private TestsToRun getOptimizedTestsToRun(TestsToRun testsToRun) {
-        final Configuration configuration = Configuration.load();
-
-        final TestExecutionPlannerLoader testExecutionPlannerLoader =
-            new TestExecutionPlannerLoader(new JavaSPILoader(), resource -> {
-                final String className = new ClassNameExtractor().extractFullyQualifiedName(resource);
-                return testsToRun.getClassByName(className) != null;
-            });
-
-        return new TestStrategyApplier(testsToRun, testExecutionPlannerLoader, bootParams.getTestClassLoader()).apply(
-            configuration);
-    }
-
     public Iterable<Class<?>> getSuites() {
-        Iterable<Class<?>> originalSuites = surefireProvider.getSuites();
-        return getOptimizedTestsToRun((TestsToRun) originalSuites);
+        return surefireProvider.getSuites();
     }
 
     public RunResult invoke(Object forkTestSet)

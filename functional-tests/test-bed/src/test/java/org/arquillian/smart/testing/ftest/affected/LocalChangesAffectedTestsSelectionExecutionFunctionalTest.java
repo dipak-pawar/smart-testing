@@ -36,7 +36,14 @@ public class LocalChangesAffectedTestsSelectionExecutionFunctionalTest {
             .applyAsLocalChanges("Single method body modification - sysout");
 
         // when
-        final List<TestResult> actualTestResults = project.build().run();
+        final List<TestResult> actualTestResults = project
+            .build()
+                .options()
+                    .withSystemProperties("version.surefire.plugin", "2.21-SNAPSHOT", "surefire.runOrder", "affected").
+                configure().
+             run();
+
+        //final List<TestResult> actualTestResults = project.build().run();
 
         // then
         assertThat(actualTestResults).containsAll(expectedTestResults).hasSameSizeAs(expectedTestResults);
@@ -57,7 +64,12 @@ public class LocalChangesAffectedTestsSelectionExecutionFunctionalTest {
             "Inlined variable in a method");
 
         // when
-        final List<TestResult> actualTestResults = project.build().run();
+        final List<TestResult> actualTestResults = project
+            .build()
+                .options()
+                    .withSystemProperties("version.surefire.plugin", "2.21-SNAPSHOT", "surefire.runOrder", "affected")
+                .configure()
+            .run();
 
         // then
         assertThat(actualTestResults).containsAll(expectedTestResults).hasSameSizeAs(expectedTestResults);

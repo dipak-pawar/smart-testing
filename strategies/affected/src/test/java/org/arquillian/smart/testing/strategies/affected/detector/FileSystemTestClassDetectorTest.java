@@ -27,11 +27,11 @@ public class FileSystemTestClassDetectorTest {
         createProjectLayoutWithTests(rootDirectory, "org.mytest", "MyFirstTest.java",
             "MySecondTest.java", "Utils.java");
 
-        final TestClassDetector testClassDetector = new FileSystemTestClassDetector(rootDirectory, resource -> resource.toString().endsWith("Test.java"));
+        final TestClassDetector testClassDetector = new FileSystemTestClassDetector(rootDirectory);
 
         // when
 
-        final Set<File> testClasses = testClassDetector.detect();
+        final Set<File> testClasses = testClassDetector.detect(resource -> resource.toString().endsWith("Test.java"));
 
         // then
 
@@ -57,11 +57,11 @@ public class FileSystemTestClassDetectorTest {
         createProjectLayoutWithTests(moduleB.toFile(), "org.mytest", "MyThirdTest.java",
             "MyFourthTest.java", "Utils.java");
 
-        final TestClassDetector testClassDetector = new FileSystemTestClassDetector(rootDirectory, resource -> resource.toString().endsWith("Test.java"));
+        final TestClassDetector testClassDetector = new FileSystemTestClassDetector(rootDirectory);
 
         // when
 
-        final Set<File> testClasses = testClassDetector.detect();
+        final Set<File> testClasses = testClassDetector.detect(resource -> resource.toString().endsWith("Test.java"));
 
         // then
 

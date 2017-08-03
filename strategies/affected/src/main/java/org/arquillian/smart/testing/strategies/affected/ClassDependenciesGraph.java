@@ -51,7 +51,7 @@ public class ClassDependenciesGraph {
     private Filter filter;
     private TestVerifier testVerifier;
 
-    ClassDependenciesGraph(ClasspathProvider classpath, TestVerifier testVerifier) {
+    public ClassDependenciesGraph(ClasspathProvider classpath, TestVerifier testVerifier) {
         this(new JavaClassBuilder(classpath));
         this.testVerifier = testVerifier;
     }
@@ -62,7 +62,7 @@ public class ClassDependenciesGraph {
         filter = new Filter(AffectedRunnerProperties.getSmartTestingAffectedInclusions(), AffectedRunnerProperties.getSmartTestingAffectedExclusions());
     }
 
-    void buildTestDependencyGraph(Collection<File> testJavaFiles) {
+    public void buildTestDependencyGraph(Collection<File> testJavaFiles) {
         // First update class index
         List<String> testClassesNames = new ArrayList<>();
         for (File testJavaFile : testJavaFiles) {
@@ -137,7 +137,7 @@ public class ClassDependenciesGraph {
     }
 
 
-    Set<String> findTestsDependingOn(Set<File> classes) {
+    public Set<String> findTestsDependingOn(Set<File> classes) {
         return classes.stream()
             .map( javaClass -> {
                 final File classLocation = JavaToClassLocation.transform(javaClass, testVerifier);

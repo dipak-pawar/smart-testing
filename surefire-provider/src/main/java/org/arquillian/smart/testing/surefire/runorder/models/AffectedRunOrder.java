@@ -1,26 +1,32 @@
-package org.arquillian.smart.testing.strategies.affected;
+package org.arquillian.smart.testing.surefire.runorder.models;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import org.apache.maven.plugin.surefire.runorder.api.RunOrder;
+import org.apache.maven.surefire.testset.RunOrderParameters;
+import org.apache.maven.surefire.util.TestsToRun;
+import org.arquillian.smart.testing.ClassNameExtractor;
 import org.arquillian.smart.testing.Logger;
-import org.arquillian.smart.testing.TestSelection;
 import org.arquillian.smart.testing.filter.TestVerifier;
 import org.arquillian.smart.testing.hub.storage.ChangeStorage;
 import org.arquillian.smart.testing.scm.Change;
 import org.arquillian.smart.testing.scm.spi.ChangeResolver;
 import org.arquillian.smart.testing.spi.JavaSPILoader;
-import org.arquillian.smart.testing.spi.TestExecutionPlanner;
+import org.arquillian.smart.testing.strategies.affected.ClassDependenciesGraph;
+import org.arquillian.smart.testing.strategies.affected.StandaloneClasspath;
+import org.arquillian.smart.testing.strategies.affected.detector.FileSystemTestClassDetector;
 import org.arquillian.smart.testing.strategies.affected.detector.TestClassDetector;
 
-public class AffectedTestsDetector implements TestExecutionPlanner {
-
-    private static final Logger logger = Logger.getLogger(AffectedTestsDetector.class);
+public class AffectedRunOrder implements RunOrder {
+    private static final Logger logger = Logger.getLogger(AffectedRunOrder.class);
 
     // TODO TestClassDetector is something that can be moved to extension
     private final TestClassDetector testClassDetector;
@@ -28,21 +34,20 @@ public class AffectedTestsDetector implements TestExecutionPlanner {
 
     private final ChangeResolver changeResolver;
     private final ChangeStorage changeStorage;
-    private final TestVerifier testVerifier;
 
-    AffectedTestsDetector(final TestClassDetector testClassDetector, String classpath, TestVerifier testVerifier) {
-        this(testClassDetector, new JavaSPILoader().onlyOne(ChangeStorage.class).get(),
-            new JavaSPILoader().onlyOne(ChangeResolver.class).get(), classpath,
-            testVerifier);
+    public AffectedRunOrder() {
+        this(new FileSystemTestClassDetector(new File(System.getProperty("user.dir"))), new JavaSPILoader().onlyOne(ChangeStorage.class).get(),
+            new JavaSPILoader().onlyOne(ChangeResolver.class).get(),
+            "");
     }
 
-    AffectedTestsDetector(TestClassDetector testClassDetector, ChangeStorage changeStorage, ChangeResolver changeResolver,
-        String classpath, TestVerifier testVerifier) {
+
+    AffectedRunOrder(TestClassDetector testClassDetector, ChangeStorage changeStorage, ChangeResolver changeResolver,
+        String classpath) {
         this.testClassDetector = testClassDetector;
         this.changeStorage = changeStorage;
         this.changeResolver = changeResolver;
         this.classpath = classpath;
-        this.testVerifier = testVerifier;
     }
 
     @Override
@@ -51,8 +56,11 @@ public class AffectedTestsDetector implements TestExecutionPlanner {
     }
 
     @Override
-    public Collection<TestSelection> getTests() {
-        ClassDependenciesGraph classDependenciesGraph = configureTestClassDetector();
+    public List<Class<?>> orderTestClasses(Collection<Class<?>> collection, RunOrderParameters runOrderParameters,
+        int i) {
+        TestVerifier testVerifier = getTestVerifier(collection);
+
+        ClassDependenciesGraph classDependenciesGraph = configureTestClassDetector(testVerifier);
 
         // TODO this operations should be done in extension to avoid scanning for all modules.
         // TODO In case of Arquillian core is an improvement of 500 ms per module
@@ -60,7 +68,7 @@ public class AffectedTestsDetector implements TestExecutionPlanner {
 
         final long beforeDetection = System.currentTimeMillis();
 
-        final Set<File> allTestsOfCurrentProject = this.testClassDetector.detect();
+        final Set<File> allTestsOfCurrentProject = this.testClassDetector.detect(testVerifier);
         classDependenciesGraph.buildTestDependencyGraph(allTestsOfCurrentProject);
 
         final Collection<Change> files = changeStorage.read()
@@ -80,17 +88,36 @@ public class AffectedTestsDetector implements TestExecutionPlanner {
 
         final long beforeFind = System.currentTimeMillis();
 
-        final LinkedHashSet<TestSelection> affected = classDependenciesGraph.findTestsDependingOn(mainClasses)
+        final LinkedHashSet<Class<?>> affected = classDependenciesGraph.findTestsDependingOn(mainClasses)
             .stream()
-            .map(s -> new TestSelection(s, "affected"))
+            .map(this::getClass)
             .collect(Collectors.toCollection(LinkedHashSet::new));
 
         logger.log(Level.FINER, "Time To Find Affected Tests %d ms", (System.currentTimeMillis() - beforeFind));
 
-        return affected;
+        return new ArrayList<>(affected);
+
     }
 
-    private ClassDependenciesGraph configureTestClassDetector() {
+    private TestVerifier getTestVerifier(Collection<Class<?>> collection) {
+        final TestsToRun testsToRun = new TestsToRun(new LinkedHashSet<>(collection));
+
+        return resource -> {
+            final String className = new ClassNameExtractor().extractFullyQualifiedName(resource);
+            return testsToRun.getClassByName(className) != null;
+        };
+    }
+
+    private Class<?> getClass(String className) {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    private ClassDependenciesGraph configureTestClassDetector(
+        TestVerifier testVerifier) {
         return new ClassDependenciesGraph(new StandaloneClasspath(Collections.emptyList(), this.classpath), testVerifier);
     }
 }
