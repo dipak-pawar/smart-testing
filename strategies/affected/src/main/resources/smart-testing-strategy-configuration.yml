@@ -1,0 +1,23 @@
+mode: ordering
+strategies:
+  - new
+  - changed
+  - affected
+applyTo: surefire
+debug: true
+disable: false
+report:
+    enable: true
+scm:
+    lastChanges: 1
+
+strategiesConfiguration:
+  affected:
+      config: true
+      transitivity: true
+      exclusions:
+         - org.package.*
+         - org.arquillian.package.*
+      inclusions:
+         - org.package.exclude.*
+         - org.arquillian.package.exclude.*

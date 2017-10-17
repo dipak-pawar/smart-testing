@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,11 @@ import org.arquillian.smart.testing.Logger;
 import org.arquillian.smart.testing.RunMode;
 import org.arquillian.smart.testing.hub.storage.local.LocalStorage;
 import org.arquillian.smart.testing.hub.storage.local.LocalStorageFileAction;
+import org.arquillian.smart.testing.spi.JavaSPILoader;
+import org.arquillian.smart.testing.spi.StrategyConfiguration;
 import org.yaml.snakeyaml.Yaml;
+
+import static org.arquillian.smart.testing.configuration.ObjectMapper.mapToObject;
 
 public class Configuration implements ConfigurationSection {
 
@@ -46,6 +51,8 @@ public class Configuration implements ConfigurationSection {
 
     private Report report;
     private Scm scm;
+
+    private List<StrategyConfiguration> strategiesConfiguration = new ArrayList<>();
 
     public String[] getStrategies() {
         return strategies;
@@ -103,6 +110,14 @@ public class Configuration implements ConfigurationSection {
         this.scm = scm;
     }
 
+    public List<StrategyConfiguration> getStrategiesConfiguration() {
+        return strategiesConfiguration;
+    }
+
+    public void setStrategiesConfiguration(List<StrategyConfiguration> strategiesConfiguration) {
+        this.strategiesConfiguration = strategiesConfiguration;
+    }
+
     public List<ConfigurationItem> registerConfigurationItems() {
         List<ConfigurationItem> configItems = new ArrayList<>();
         configItems.add(new ConfigurationItem("strategies", SMART_TESTING, new String[0]));
@@ -110,7 +125,21 @@ public class Configuration implements ConfigurationSection {
         configItems.add(new ConfigurationItem("applyTo", SMART_TESTING_APPLY_TO));
         configItems.add(new ConfigurationItem("disable", SMART_TESTING_DISABLE, false));
         configItems.add(new ConfigurationItem("debug", SMART_TESTING_DEBUG, false));
+
+        configItems.add(new ConfigurationItem("strategiesConfiguration", getDefaultStrategyConfigurations()));
         return configItems;
+    }
+
+    public List<StrategyConfiguration> getDefaultStrategyConfigurations() {
+        List<StrategyConfiguration> convertedList = new ArrayList<>();
+        new JavaSPILoader().all(StrategyConfiguration.class)
+            .forEach(strategyConfiguration -> {
+                final Class<StrategyConfiguration> aClass1 =
+                    (Class<StrategyConfiguration>) strategyConfiguration.getClass();
+                convertedList.add(mapToObject(aClass1, new HashMap<>(0)));
+            });
+
+        return convertedList;
     }
 
     public static Configuration load() {
@@ -208,7 +237,7 @@ public class Configuration implements ConfigurationSection {
     }
 
     private static Configuration parseConfiguration(Map<String, Object> yamlConfiguration) {
-        return ObjectMapper.mapToObject(Configuration.class, yamlConfiguration);
+        return mapToObject(Configuration.class, yamlConfiguration);
     }
 
     public boolean isSelectingMode() {

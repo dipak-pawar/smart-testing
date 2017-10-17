@@ -1,6 +1,10 @@
 package org.arquillian.smart.testing.rules.git.server;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.arquillian.smart.testing.rules.git.GitCloner;
 import org.eclipse.jgit.api.errors.GitAPIException;

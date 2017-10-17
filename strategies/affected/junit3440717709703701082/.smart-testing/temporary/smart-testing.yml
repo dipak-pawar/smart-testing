@@ -1,0 +1,14 @@
+!!org.arquillian.smart.testing.configuration.Configuration
+applyTo: null
+debug: false
+disable: false
+mode: SELECTING
+report: {dir: target, enable: false, name: report.xml}
+scm:
+  range: {head: HEAD, tail: HEAD~0}
+strategies: []
+strategiesConfiguration:
+- !!org.arquillian.smart.testing.strategies.affected.AffectedConfiguration {config: null,
+  exclusions: null, inclusions: org.arquillian.smart.testing.strategies.affected.fakeproject.main.A,
+  transitivity: true}
+- !!org.arquillian.smart.testing.strategies.affected.Foo {}

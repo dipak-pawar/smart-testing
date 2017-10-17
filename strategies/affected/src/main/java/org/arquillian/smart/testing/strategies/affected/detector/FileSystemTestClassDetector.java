@@ -23,6 +23,10 @@ public class FileSystemTestClassDetector implements TestClassDetector {
         this.verifier = verifier;
     }
 
+    public File getRootDirectory() {
+        return rootDirectory;
+    }
+
     @Override
     public Set<File> detect() {
         try (Stream<Path> stream = Files.walk(rootDirectory.toPath())) {

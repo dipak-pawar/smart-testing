@@ -14,6 +14,7 @@ import org.arquillian.smart.testing.scm.Change;
 import org.arquillian.smart.testing.scm.spi.ChangeResolver;
 import org.arquillian.smart.testing.spi.JavaSPILoader;
 import org.arquillian.smart.testing.spi.TestExecutionPlanner;
+import org.arquillian.smart.testing.strategies.affected.detector.FileSystemTestClassDetector;
 import org.arquillian.smart.testing.strategies.affected.detector.TestClassDetector;
 
 public class AffectedTestsDetector implements TestExecutionPlanner {
@@ -84,6 +85,6 @@ public class AffectedTestsDetector implements TestExecutionPlanner {
     }
 
     private ClassDependenciesGraph configureTestClassDetector() {
-        return new ClassDependenciesGraph(testVerifier);
+        return new ClassDependenciesGraph(testVerifier, ((FileSystemTestClassDetector) testClassDetector).getRootDirectory());
     }
 }

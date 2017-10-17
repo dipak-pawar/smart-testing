@@ -68,6 +68,9 @@ public class HistoricalChangesAffectedTestsSelectionExecutionWithConfigFileFunct
                 .scm()
                     .lastChanges("2")
                     .build()
+                .strategiesConfiguration()
+                    .strategyConfiguration().name(AFFECTED).exclusions("").add()
+                    .build()
                 .build();
         // end::documentation_config[]
 

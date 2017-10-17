@@ -1,0 +1,9 @@
+affected:
+    config: true
+    transitivity: true
+    exclusions:
+       - org.package.*
+       - org.arquillian.package.*
+    inclusions:
+       - org.package.exclude.*
+       - org.arquillian.package.exclude.*
