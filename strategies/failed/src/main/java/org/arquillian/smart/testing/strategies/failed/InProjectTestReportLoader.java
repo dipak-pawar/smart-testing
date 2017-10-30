@@ -21,7 +21,7 @@ public class InProjectTestReportLoader implements TestReportLoader {
     private final JavaSPILoader javaSPILoader;
     private String rootDirectory;
 
-    InProjectTestReportLoader(JavaSPILoader javaSPILoader) {
+    public InProjectTestReportLoader(JavaSPILoader javaSPILoader) {
         this(javaSPILoader, ".");
     }
 

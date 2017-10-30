@@ -246,10 +246,6 @@ public class Configuration implements ConfigurationSection {
         return this.mode != null;
     }
 
-    public boolean areStrategiesDefined() {
-        return strategies.length > 0;
-    }
-
     public boolean isApplyToDefined() {
         return this.applyTo != null;
     }

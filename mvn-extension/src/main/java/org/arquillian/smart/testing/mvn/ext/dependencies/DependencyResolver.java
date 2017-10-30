@@ -63,10 +63,6 @@ public class DependencyResolver {
             }
         }
         strategyMismatch.forEach(msg -> LOGGER.error(msg));
-        if (!strategyMismatch.isEmpty()) {
-            throw new IllegalStateException("Unknown strategies (see above). Please refer to http://arquillian.org/smart-testing/#_strategies "
-                + "for the list of available strategies.");
-        }
         configuration.setStrategies(strategies);
     }
 

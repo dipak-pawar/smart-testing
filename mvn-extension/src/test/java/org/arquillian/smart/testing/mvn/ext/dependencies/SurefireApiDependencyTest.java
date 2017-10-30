@@ -8,6 +8,7 @@ import org.apache.maven.model.Plugin;
 import org.arquillian.smart.testing.configuration.Configuration;
 import org.arquillian.smart.testing.mvn.ext.ApplicablePlugins;
 import org.assertj.core.groups.Tuple;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
@@ -91,7 +92,7 @@ public class SurefireApiDependencyTest {
 
     }
 
-    @Test
+    @Test@Ignore // TODO: 10/30/17 This needs to be update as we will be replacing strategy with surefire's runorder.
     public void should_fail_when_autocorrect_repeats_the_strategy()
         throws Exception {
         // given

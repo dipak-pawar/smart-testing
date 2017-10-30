@@ -11,7 +11,7 @@ import java.util.stream.StreamSupport;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.maven.surefire.providerapi.ProviderParameters;
 import org.apache.maven.surefire.providerapi.SurefireProvider;
-import org.apache.maven.surefire.report.DefaultConsoleReporter;
+import org.apache.maven.surefire.report.DefaultDirectConsoleReporter;
 import org.apache.maven.surefire.testset.TestRequest;
 import org.apache.maven.surefire.util.TestsToRun;
 import org.arquillian.smart.testing.configuration.Configuration;
@@ -64,7 +64,7 @@ public class SmartTestingProviderTest {
         Configuration.load().dump(temporaryFolder.getRoot());
         System.setProperty("basedir", temporaryFolder.getRoot().toString());
 
-        when(providerParameters.getConsoleLogger()).thenReturn(new DefaultConsoleReporter(new PrintStream(System.out)));
+        when(providerParameters.getConsoleLogger()).thenReturn(new DefaultDirectConsoleReporter(new PrintStream(System.out)));
     }
 
     @Test

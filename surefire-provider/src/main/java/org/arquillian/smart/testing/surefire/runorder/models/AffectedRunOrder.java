@@ -1,64 +1,63 @@
-package org.arquillian.smart.testing.strategies.affected;
+package org.arquillian.smart.testing.surefire.runorder.models;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.arquillian.smart.testing.configuration.Configuration;
-import org.arquillian.smart.testing.logger.Logger;
-import org.arquillian.smart.testing.TestSelection;
+import org.apache.maven.plugin.surefire.runorder.api.RunOrder;
+import org.apache.maven.surefire.testset.RunOrderParameters;
+import org.apache.maven.surefire.util.TestsToRun;
 import org.arquillian.smart.testing.api.TestVerifier;
+import org.arquillian.smart.testing.configuration.Configuration;
 import org.arquillian.smart.testing.hub.storage.ChangeStorage;
 import org.arquillian.smart.testing.logger.Log;
+import org.arquillian.smart.testing.logger.Logger;
 import org.arquillian.smart.testing.scm.Change;
 import org.arquillian.smart.testing.scm.spi.ChangeResolver;
 import org.arquillian.smart.testing.spi.JavaSPILoader;
-import org.arquillian.smart.testing.spi.TestExecutionPlanner;
+import org.arquillian.smart.testing.strategies.affected.ClassDependenciesGraph;
 import org.arquillian.smart.testing.strategies.affected.detector.FileSystemTestClassDetector;
 import org.arquillian.smart.testing.strategies.affected.detector.TestClassDetector;
 
-public class AffectedTestsDetector implements TestExecutionPlanner {
+public class AffectedRunOrder implements RunOrder {
 
     private static final Logger logger = Log.getLogger();
 
+
     // TODO TestClassDetector is something that can be moved to extension
-    private final TestClassDetector testClassDetector;
+    private TestClassDetector testClassDetector;
 
-    private final ChangeResolver changeResolver;
-    private final ChangeStorage changeStorage;
-    private final File projectDir;
-    private final TestVerifier testVerifier;
-    private final Configuration configuration;
+    private ChangeResolver changeResolver;
+    private ChangeStorage changeStorage;
+    private File projectDir;
+    private TestVerifier testVerifier;
+    private Configuration configuration;
 
-    AffectedTestsDetector(File projectDir, TestVerifier testVerifier, Configuration configuration) {
-        this(new FileSystemTestClassDetector(projectDir, testVerifier),
+    public AffectedRunOrder() {
+        this(new FileSystemTestClassDetector(Paths.get("").toFile().getAbsoluteFile()),
             new JavaSPILoader().onlyOne(ChangeStorage.class).get(),
             new JavaSPILoader().onlyOne(ChangeResolver.class).get(),
-            projectDir,
-            testVerifier,
-            configuration);
+            Paths.get("").toFile().getAbsoluteFile());
     }
 
-    public AffectedTestsDetector(TestClassDetector testClassDetector, ChangeStorage changeStorage,
-        ChangeResolver changeResolver,
-        File projectDir, TestVerifier testVerifier, Configuration configuration) {
+    AffectedRunOrder(TestClassDetector testClassDetector, ChangeStorage changeStorage, ChangeResolver changeResolver,
+        File projectDir) {
         this.testClassDetector = testClassDetector;
         this.changeStorage = changeStorage;
         this.changeResolver = changeResolver;
         this.projectDir = projectDir;
-        this.testVerifier = testVerifier;
-        this.configuration = configuration;
     }
 
     @Override
-    public String getName() {
-        return "affected";
-    }
-
-    @Override
-    public Collection<TestSelection> getTests() {
+    public List<Class<?>> orderTestClasses(Collection<Class<?>> collection, RunOrderParameters runOrderParameters,
+        int i) {
+        configuration = Configuration.load(projectDir);
+        testVerifier = getTestVerifier(collection);
         ClassDependenciesGraph classDependenciesGraph = configureTestClassDetector();
 
         // TODO this operations should be done in extension to avoid scanning for all modules.
@@ -67,13 +66,13 @@ public class AffectedTestsDetector implements TestExecutionPlanner {
 
         final long beforeDetection = System.currentTimeMillis();
 
-        final Set<File> allTestsOfCurrentProject = this.testClassDetector.detect();
+        final Set<File> allTestsOfCurrentProject = this.testClassDetector.detect(testVerifier);
         classDependenciesGraph.buildTestDependencyGraph(allTestsOfCurrentProject);
 
         final Collection<Change> files = changeStorage.read(projectDir)
             .orElseGet(() -> {
                 logger.warn("No cached changes detected... using direct resolution");
-                return changeResolver.diff(projectDir, configuration, getName());
+                return changeResolver.diff(projectDir, this.configuration, getName());
             });
 
         logger.debug("Time To Build Affected Dependencies Graph %d ms", (System.currentTimeMillis() - beforeDetection));
@@ -86,17 +85,38 @@ public class AffectedTestsDetector implements TestExecutionPlanner {
 
         final long beforeFind = System.currentTimeMillis();
 
-        final Set<TestSelection> affected = classDependenciesGraph.findTestsDependingOn(mainClasses)
+        final LinkedHashSet<Class<?>> affected = classDependenciesGraph.findTestsDependingOn(mainClasses)
             .stream()
-            .map(s -> new TestSelection(s, "affected"))
+            .map(this::getClass)
             .collect(Collectors.toCollection(LinkedHashSet::new));
 
         logger.debug("Time To Find Affected Tests %d ms", (System.currentTimeMillis() - beforeFind));
 
-        return affected;
+        return new ArrayList<>(affected);
+
+    }
+
+    private TestVerifier getTestVerifier(Collection<Class<?>> collection) {
+        final TestsToRun testsToRun = new TestsToRun(new LinkedHashSet<>(collection));
+
+        return className -> testsToRun.getClassByName(className) != null;
+    }
+
+    private Class<?> getClass(String className) {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException();
+        }
     }
 
     private ClassDependenciesGraph configureTestClassDetector() {
         return new ClassDependenciesGraph(testVerifier);
     }
+
+    @Override
+    public String getName() {
+        return "affected";
+    }
+
 }

@@ -30,11 +30,6 @@ public class ClassNameExtractor {
         }
     }
 
-    public String extractFullyQualifiedName(String path) {
-        return extractFullyQualifiedName(new File(path));
-    }
-
-
     public String extractFullyQualifiedName(Path location) {
         return extractFullyQualifiedName(location.toFile());
     }

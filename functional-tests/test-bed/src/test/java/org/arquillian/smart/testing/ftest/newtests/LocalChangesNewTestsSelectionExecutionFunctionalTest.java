@@ -1,6 +1,7 @@
 package org.arquillian.smart.testing.ftest.newtests;
 
 import java.util.Collection;
+import java.util.List;
 import org.arquillian.smart.testing.ftest.testbed.project.Project;
 import org.arquillian.smart.testing.ftest.testbed.project.TestResults;
 import org.arquillian.smart.testing.rules.git.GitClone;
@@ -29,15 +30,23 @@ public class LocalChangesNewTestsSelectionExecutionFunctionalTest {
         final Project project = testBed.getProject();
 
         project.configureSmartTesting()
-                    .executionOrder(NEW)
+                    //.executionOrder(NEW)
                     .inMode(SELECTING)
                .enable();
 
         final Collection<TestResult> expectedTestResults = project
             .applyAsLocalChanges("Adds new unit test");
 
+        final TestResults actualTestResults = project
+                       .build("config/impl-base")
+                            .options()
+                                .withSystemProperties("version.surefire.plugin", "2.21.0-SNAPSHOT", "surefire.runOrder", "new").
+                            configure().
+                         run();
+
+
         // when
-        final TestResults actualTestResults = project.build("config/impl-base").run();
+       // final TestResults actualTestResults = project.build("config/impl-base").run();
 
         // then
         assertThat(actualTestResults.accumulatedPerTestClass()).containsAll(expectedTestResults).hasSameSizeAs(expectedTestResults);

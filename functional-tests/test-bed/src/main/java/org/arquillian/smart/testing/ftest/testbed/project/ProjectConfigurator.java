@@ -111,6 +111,9 @@ public class ProjectConfigurator {
     }
 
     public String strategies() {
+        if (getStrategies() == null) {
+            return "";
+        }
        return Arrays.stream(getStrategies()).map(Strategy::getName).collect(Collectors.joining(","));
     }
 

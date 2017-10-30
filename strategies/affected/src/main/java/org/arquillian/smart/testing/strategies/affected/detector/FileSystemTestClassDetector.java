@@ -16,11 +16,15 @@ import org.arquillian.smart.testing.api.TestVerifier;
 public class FileSystemTestClassDetector implements TestClassDetector {
 
     private final File rootDirectory;
-    private final TestVerifier verifier;
+    private TestVerifier verifier;
 
     public FileSystemTestClassDetector(File rootDirectory, TestVerifier verifier) {
         this.rootDirectory = rootDirectory;
         this.verifier = verifier;
+    }
+
+    public FileSystemTestClassDetector(File rootDirectory) {
+        this.rootDirectory = rootDirectory;
     }
 
     @Override
@@ -28,6 +32,18 @@ public class FileSystemTestClassDetector implements TestClassDetector {
         try (Stream<Path> stream = Files.walk(rootDirectory.toPath())) {
             return stream
                 .filter(path -> Files.isRegularFile(path) && isJavaFile(path) && verifier.isTest(path))
+                .map(Path::toFile)
+                .collect(Collectors.toSet());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public Set<File> detect(TestVerifier testVerifier) {
+        try (Stream<Path> stream = Files.walk(rootDirectory.toPath())) {
+            return stream
+                .filter(path -> Files.isRegularFile(path) && isJavaFile(path) && testVerifier.isTest(path))
                 .map(Path::toFile)
                 .collect(Collectors.toSet());
         } catch (IOException e) {

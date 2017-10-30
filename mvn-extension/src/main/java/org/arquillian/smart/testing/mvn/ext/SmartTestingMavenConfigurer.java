@@ -59,13 +59,9 @@ class SmartTestingMavenConfigurer extends AbstractMavenLifecycleParticipant {
         logger.debug("Applied user properties: %s", session.getUserProperties());
 
         File projectDirectory = session.getTopLevelProject().getModel().getProjectDirectory();
-        if (configuration.areStrategiesDefined()) {
-            configureExtension(session, configuration);
-            calculateChanges(projectDirectory, configuration);
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> purgeLocalStorageAndExportPom(session)));
-        } else {
-            logStrategiesNotDefined();
-        }
+        configureExtension(session, configuration);
+        calculateChanges(projectDirectory, configuration);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> purgeLocalStorageAndExportPom(session)));
     }
 
     private void loadConfigAndCheckIfInstallationShouldBeSkipped(MavenSession session){
@@ -116,10 +112,6 @@ class SmartTestingMavenConfigurer extends AbstractMavenLifecycleParticipant {
 
         if (skipExtensionInstallation) {
             return;
-        }
-
-        if (!configuration.areStrategiesDefined()) {
-            logStrategiesNotDefined();
         }
 
         purgeLocalStorageAndExportPom(session);

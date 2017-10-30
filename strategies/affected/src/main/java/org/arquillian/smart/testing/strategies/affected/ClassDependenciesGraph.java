@@ -52,7 +52,7 @@ public class ClassDependenciesGraph {
     private final TestVerifier testVerifier;
     private final boolean enableTransitivity;
 
-    ClassDependenciesGraph(TestVerifier testVerifier) {
+    public ClassDependenciesGraph(TestVerifier testVerifier) {
         this.builder = new JavaClassBuilder();
         this.graph = new DefaultDirectedGraph<>(DefaultEdge.class);
         AffectedRunnerProperties affectedRunnerProperties = new AffectedRunnerProperties();
@@ -61,7 +61,7 @@ public class ClassDependenciesGraph {
         this.enableTransitivity = affectedRunnerProperties.getSmartTestingAffectedTransitivity();
     }
 
-    void buildTestDependencyGraph(Collection<File> testJavaFiles) {
+    public void buildTestDependencyGraph(Collection<File> testJavaFiles) {
         // First update class index
         List<String> testClassesNames = new ArrayList<>();
         for (File testJavaFile : testJavaFiles) {
@@ -136,7 +136,7 @@ public class ClassDependenciesGraph {
     }
 
 
-    Set<String> findTestsDependingOn(Set<File> classes) {
+    public Set<String> findTestsDependingOn(Set<File> classes) {
         return classes.stream()
             .map( javaClass -> {
                 final File classLocation = JavaToClassLocation.transform(javaClass, testVerifier);

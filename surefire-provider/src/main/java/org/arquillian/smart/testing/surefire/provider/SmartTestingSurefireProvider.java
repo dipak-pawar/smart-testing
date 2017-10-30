@@ -53,7 +53,7 @@ public class SmartTestingSurefireProvider implements SurefireProvider {
     }
 
     public Iterable<Class<?>> getSuites() {
-        return getOptimizedTestsToRun((TestsToRun) surefireProvider.getSuites());
+        return surefireProvider.getSuites();
     }
 
     public RunResult invoke(Object forkTestSet) throws TestSetFailedException, ReporterException, InvocationTargetException {
@@ -76,14 +76,14 @@ public class SmartTestingSurefireProvider implements SurefireProvider {
         }
     }
 
-    private TestsToRun getOptimizedTestsToRun(TestsToRun testsToRun) {
+    /*private TestsToRun getOptimizedTestsToRun(TestsToRun testsToRun) {
         Set<TestSelection> selection = SmartTesting
             .with(className -> testsToRun.getClassByName(className) != null, configuration)
             .in(getProjectDir())
             .applyOnClasses(testsToRun);
 
         return new TestsToRun(SmartTesting.getClasses(selection));
-    }
+    }*/
 
     private File getProjectDir() {
         if (System.getProperty("basedir") == null) {
