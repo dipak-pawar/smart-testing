@@ -66,11 +66,10 @@ public class ProjectBuilder {
         Path pomFile = executionDir != null ? Paths.get(rootPath, executionDir, POM_XML)
             : Paths.get(rootPath, POM_XML);
         final PomEquippedEmbeddedMaven embeddedMaven = EmbeddedMaven.forProject(pomFile.toString());
+        embeddedMaven.setDebugLoggerLevel();
 
         buildConfigurator.enableDebugOptions();
         setCustomMavenInstallation(embeddedMaven);
-
-        System.out.println("$ mvn " + Arrays.toString(goals).replaceAll("[\\[|\\]|,]", "") + " " + printSystemProperties());
 
         final BuiltProject build = embeddedMaven
                     .setShowVersion(true)
